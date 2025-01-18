@@ -166,6 +166,13 @@ public class unevenDice : MonoBehaviour
         double side5Height = Vector3.Distance(side5mass, GTestAtlok);
         double side6Height = Vector3.Distance(side6mass, GTestAtlok);
 
+        Debug.Log("Side 1 height: " + side1Height);
+        Debug.Log("Side 2 height: " + side2Height);
+        Debug.Log("Side 3 height: " + side3Height);
+        Debug.Log("Side 4 height: " + side4Height);
+        Debug.Log("Side 5 height: " + side5Height);
+        Debug.Log("Side 6 height: " + side6Height);
+
         return new double[] {
             areas[0] * side1Height / 3,
             areas[1] * side2Height / 3,
