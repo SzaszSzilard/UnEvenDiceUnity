@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using Unity.VisualScripting;
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class unevenDice : MonoBehaviour
@@ -9,23 +11,26 @@ public class unevenDice : MonoBehaviour
     private float forceX, forceY, forceZ;
     public int experimentCount;
 
-    static double totalArea = 14.6086 + 18.6866 + 19.5486 + 13.6163 + 17.1518 + 10.4375;
-    private double[] probabilities = new double[] {
-        (double) 14.6086 / totalArea,
-        (double) 18.6866 / totalArea,
-        (double) 19.5486 / totalArea,
-        (double) 13.6163 / totalArea,        
-        (double) 17.1518 / totalArea,
-        (double) 10.4375 / totalArea
-
+    static double[] areas =
+        new double[] {
+            10.4375,
+            17.1518,
+            13.6163,
+            19.5486,
+            18.6866,
+            14.6086
     };
+
+    private double[] probabilities;
+
+    Vector3 A, B, C, D, E, F, G, H;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         initialize();
         printProbabilities(probabilities, true);
-        printProbabilities(simulate(experimentCount), false); ;
+        printProbabilities(simulate(experimentCount), false);
     }
 
     // Update is called once per frame
@@ -76,7 +81,7 @@ public class unevenDice : MonoBehaviour
                 diceFaceNum[5]++;
             }
         }
-        
+
         for (int i = 0; i < probabilities.Length; i++)
         {
             diceFaceNum[i] /= numberOfRolls;
@@ -119,6 +124,13 @@ public class unevenDice : MonoBehaviour
 
     private void initialize()
     {
+        setPeaks();
+        
+        double[] sideVolumes = calcSideVolumes();
+        double totalVolume = sideVolumes.Sum();
+        double[] oppositeProbabilities = sideVolumes.Select(x => x / totalVolume).ToArray();
+        probabilities = oppositeProbabilities.Reverse().ToArray();
+
         startRollingForce = 500;
         maxRandomForceValue = 300;
 
@@ -130,5 +142,53 @@ public class unevenDice : MonoBehaviour
             Random.Range(0, 360),
             0
         );
+    }
+
+    private double[] calcSideVolumes()
+    {
+        Vector3 G1 = A + F / 2;
+        Vector3 G2 = B + E / 2;
+        Vector3 G3 = C + G / 2;
+        Vector3 G4 = D + H / 2;
+        Vector3 GTestAtlok = (G1 + G2 + G3 + G4) / 4;
+
+        Vector3 side1mass = calcCenterOfMass2D(C, D, E, F);
+        Vector3 side2mass = calcCenterOfMass2D(A, D, E, G);
+        Vector3 side3mass = calcCenterOfMass2D(A, B, C, D);
+        Vector3 side4mass = calcCenterOfMass2D(E, F, G, H);
+        Vector3 side5mass = calcCenterOfMass2D(B, C, F, H);
+        Vector3 side6mass = calcCenterOfMass2D(A, B, G, H);
+
+        double side1Height = Vector3.Distance(side1mass, GTestAtlok);
+        double side2Height = Vector3.Distance(side2mass, GTestAtlok);
+        double side3Height = Vector3.Distance(side3mass, GTestAtlok);
+        double side4Height = Vector3.Distance(side4mass, GTestAtlok);
+        double side5Height = Vector3.Distance(side5mass, GTestAtlok);
+        double side6Height = Vector3.Distance(side6mass, GTestAtlok);
+
+        return new double[] {
+            areas[0] * side1Height / 3,
+            areas[1] * side2Height / 3,
+            areas[2] * side3Height / 3,
+            areas[3] * side4Height / 3,
+            areas[4] * side5Height / 3,
+            areas[5] * side6Height / 3
+        };
+    }
+
+    private Vector3 calcCenterOfMass2D(Vector3 P1, Vector3 P2, Vector3 P3, Vector3 P4) {
+        return (P1 + P2 + P3 + P4) / 4;
+    }
+
+    private void setPeaks()
+    {
+        A = GameObject.Find("A").transform.position;
+        B = GameObject.Find("B").transform.position;
+        C = GameObject.Find("C").transform.position;
+        D = GameObject.Find("D").transform.position;
+        E = GameObject.Find("E").transform.position;
+        F = GameObject.Find("F").transform.position;
+        G = GameObject.Find("G").transform.position;
+        H = GameObject.Find("H").transform.position;
     }
 }
